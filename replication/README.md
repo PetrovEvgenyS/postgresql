@@ -65,6 +65,47 @@
          now() - pg_last_xact_replay_timestamp() AS replay_delay;
   ```
 
+## Как интерпретировать проверки (что считается «нормой»)
+
+### На Primary (`pg_stat_replication`)
+Запрос:
+```sql
+SELECT client_addr, state, sync_state, write_lag, flush_lag, replay_lag
+FROM pg_stat_replication;
+```
+Что должно быть:
+- **Строка(и) есть** — Standby(и) подключены.
+- **state = 'streaming'** — идёт потоковая передача WAL.
+- **sync_state = 'async'** (или `sync`/`potential` — смотря что настроено).
+- **lag-колонки** (`write_lag/flush_lag/replay_lag`) — как можно ближе к `00:00:00`.
+- **client_addr** — IP вашего Standby.
+
+Если **нет строк** → Standby не подключён (см. сеть/пароль/`pg_hba.conf`/`listen_addresses`).
+
+### На Standby
+Запросы:
+```sql
+SELECT pg_is_in_recovery();                    -- должно быть t
+SELECT pg_last_wal_receive_lsn();              -- последний полученный LSN
+SELECT pg_last_wal_replay_lsn();               -- последний применённый LSN
+SELECT now() - pg_last_xact_replay_timestamp() AS replay_delay;  -- оценка лага по времени
+```
+Что должно быть:
+- **pg_is_in_recovery = t** — узел в режиме реплики.
+- **LSN-ы растут** со временем; `replay_lsn` догоняет `receive_lsn`.
+- **replay_delay ≈ 0** (или несколько секунд при нагрузке). `NULL` бывает при отсутствии свежих транзакций.
+
+### Короткий чеклист
+- «**Репликация настроена**» — есть роль `REPLICATION`, `pg_hba.conf` содержит доступ для Standby, на Primary `wal_level=replica`, `max_wal_senders>0`, на Standby есть `standby.signal`/`primary_conninfo`.
+- «**Репликация работает**» — на Primary видна строка в `pg_stat_replication` со **state='streaming'**, на Standby **`pg_is_in_recovery = t`**, LSN/время продвигаются.
+- «**Есть отставание**» — большие значения `replay_lag/flush_lag/write_lag` на Primary или большой `replay_delay` на Standby; LSN почти не двигается.
+
+### Частые проблемы и куда смотреть
+- **FATAL: password authentication failed** — неверный пароль роли репликации или нет строки в `pg_hba.conf` (`host replication … md5`).  
+- **no connection / нет строк в `pg_stat_replication`** — firewall/порт 5432, `listen_addresses`, `client_addr` не совпадает.  
+- **`pg_is_in_recovery = f` на Standby** — реплика была промоутнута (или нет `standby.signal`).  
+- **Лаг растёт** — высокая нагрузка/медленный диск на Standby; проверьте `replay_lag`/`replay_delay` и I/O.
+
 ## Переключение ролей (Failover)
 
 ### Повышение Standby до Primary
@@ -83,8 +124,11 @@ SELECT pg_is_in_recovery();  -- должно быть f
 На **старом Primary** (теперь будет Standby):
 1. Остановить сервис и очистить каталог данных (внимание — удаляет локальные данные):
    ```bash
-   sudo systemctl stop postgresql
-   sudo rm -rf /var/lib/postgresql/<VERSION>/main/*
+   systemctl stop postgresql
+   rm -rf /var/lib/postgresql/16/main/*
+
+   export PG_CONF="/etc/postgresql/16/main/postgresql.conf"
+   sed -i "s/^#\?wal_level.*/wal_level = replica/" "$PG_CONF"
    ```
 2. Инициализация из нового Primary при помощи `pg_basebackup`:
    ```bash
