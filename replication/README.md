@@ -3,9 +3,9 @@
 ## Описание
 
 В репозитории три файла для автоматизации настройки **физической** репликации PostgreSQL:
-- **setup_primary_postgres_clean.sh** — настраивает первичный сервер (Primary): включает WAL, создаёт пользователя репликации, правит `postgresql.conf` и `pg_hba.conf`.
-- **setup_standby_postgres_clean.sh** — настраивает резервный сервер (Standby): останавливает сервис, делает `pg_basebackup` с Primary и включает потоковую репликацию.
-- **README_postgres_clean.md** — этот файл, с инструкциями, проверками и фейловером.
+- **setup_primary_postgres.sh** — настраивает первичный сервер (Primary): включает WAL, создаёт пользователя репликации, правит `postgresql.conf` и `pg_hba.conf`.
+- **setup_standby_postgres.sh** — настраивает резервный сервер (Standby): останавливает сервис, делает `pg_basebackup` с Primary и включает потоковую репликацию.
+- **README.md** — этот файл, с инструкциями, проверками и фейловером.
 
 > Скрипты рассчитаны на Debian/Ubuntu-пакеты (`systemd`), с путями вида `/etc/postgresql/<версия>/main` и `/var/lib/postgresql/<версия>/main`. При необходимости поправьте переменные в начале скриптов.
 
@@ -14,16 +14,15 @@
 - PostgreSQL установлен на обоих серверах (Primary и Standby).
 - Доступ суперпользователя PostgreSQL (`postgres`) на обоих серверах.
 - Сетевое соединение между узлами (порт 5432 открыт).
-- На Standby установлен клиент `pg_basebackup` (обычно в пакете `postgresql-client` или `postgresql-<версия>`).
 
 ## Порядок настройки
 
 ### 1) Настройка Primary
 
-1. Отредактируйте переменные в `setup_primary_postgres_clean.sh` (IP Standby, пароль/пользователь, версия PG).
+1. Отредактируйте переменные в `setup_primary_postgres.sh` (IP Standby, пароль/пользователь, версия PG).
 2. Запустите скрипт на Primary:
    ```bash
-   sudo ./setup_primary_postgres_clean.sh
+   sudo ./setup_primary_postgres.sh
    ```
 3. Убедитесь, что Primary слушает снаружи и параметры применены:
    ```bash
@@ -36,10 +35,10 @@
 
 ### 2) Настройка Standby
 
-1. Отредактируйте переменные в `setup_standby_postgres_clean.sh` (IP Primary, тот же пользователь/пароль, версия PG).
+1. Отредактируйте переменные в `setup_standby_postgres.sh` (IP Primary, тот же пользователь/пароль, версия PG).
 2. Запустите скрипт на Standby:
    ```bash
-   sudo ./setup_standby_postgres_clean.sh
+   sudo ./setup_standby_postgres.sh
    ```
 3. Проверка статуса:
    - На Standby:
