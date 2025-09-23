@@ -16,10 +16,7 @@ rm -rf "${DATA_DIR:?}/"*
 
 echo "[*] Running pg_basebackup from Primary ..."
 export PGPASSWORD="${REPL_PASSWORD}"
-  sudo -u postgres pg_basebackup -h "$PRIMARY_IP" -U "$REPL_USER" -D "$DATA_DIR" -X stream -R -C -S slot_standby -P
-else
-  sudo -u postgres pg_basebackup -h "$PRIMARY_IP" -U "$REPL_USER" -D "$DATA_DIR" -X stream -R -P
-fi
+sudo -u postgres pg_basebackup -h "$PRIMARY_IP" -U "$REPL_USER" -D "$DATA_DIR" -X stream -R -P
 unset PGPASSWORD
 
 echo "[*] Fixing ownership ..."

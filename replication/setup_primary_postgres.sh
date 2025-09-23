@@ -26,11 +26,7 @@ fi
 echo "[*] Restarting PostgreSQL ..."
 systemctl restart postgresql
 
-echo "[*] Creating replication role ...]"
+echo "[*] Creating replication role ..."
 sudo -u postgres psql -c "CREATE ROLE \"${REPL_USER}\" WITH LOGIN REPLICATION ENCRYPTED PASSWORD '${REPL_PASSWORD}';"
-
-  echo "[*] Ensuring physical replication slot exists (slot_standby) ..."
-  sudo -u postgres psql -v ON_ERROR_STOP=1 -c "SELECT CASE WHEN EXISTS (SELECT 1 FROM pg_replication_slots WHERE slot_name='slot_standby') THEN 1 ELSE pg_create_physical_replication_slot('slot_standby') END;"
-fi
 
 echo "[*] Primary is configured. Check: SELECT client_addr, state FROM pg_stat_replication;"
