@@ -13,9 +13,9 @@ PG_CONF="${CONF_DIR}/postgresql.conf"
 
 echo "[*] Updating postgresql.conf ..."
 sed -i "s/^#\?listen_addresses.*/listen_addresses = '*'/" "$PG_CONF" || true
-sed -i "s/^#\?wal_level.*/wal_level = replica/" "$PG_CONF" || echo "wal_level = replica" | tee -a "$PG_CONF" >/dev/null
-sed -i "s/^#\?max_wal_senders.*/max_wal_senders = 10/" "$PG_CONF" || echo "max_wal_senders = 10" | tee -a "$PG_CONF" >/dev/null
-sed -i "s/^#\?max_replication_slots.*/max_replication_slots = 10/" "$PG_CONF" || echo "max_replication_slots = 10" | tee -a "$PG_CONF" >/dev/null
+sed -i "s/^#\?wal_level.*/wal_level = replica/" "$PG_CONF"
+sed -i "s/^#\?max_wal_senders.*/max_wal_senders = 10/" "$PG_CONF"
+sed -i "s/^#\?max_replication_slots.*/max_replication_slots = 10/" "$PG_CONF"
 
 echo "[*] Updating pg_hba.conf ..."
 ALLOW_REPL="host    replication    ${REPL_USER}    ${STANDBY_IP}/32    md5"
