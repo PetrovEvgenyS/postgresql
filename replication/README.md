@@ -30,7 +30,7 @@
    ```
 4. Создайте пользователя для репликации (если скрипт не сделал это сам):
    ```bash
-   sudo -u postgres psql -c "CREATE ROLE replicator WITH LOGIN REPLICATION ENCRYPTED PASSWORD 'Ee123456';"
+   sudo -u postgres psql -c "CREATE ROLE replicator WITH LOGIN REPLICATION ENCRYPTED PASSWORD 'your_password';"
    ```
 
 ### 2) Настройка Standby
@@ -122,8 +122,8 @@ sed -i "s/^#\?max_wal_senders.*/max_wal_senders = 10/" "$PG_CONF"
 sed -i "s/^#\?max_replication_slots.*/max_replication_slots = 10/" "$PG_CONF"
 
 export PG_HBA="/etc/postgresql/16/main/pg_hba.conf"
-grep -qF "host    replication    replicator    10.10.10.2/32    md5" "$PG_HBA" \
-  || sed -i '$a host    replication    replicator    10.10.10.2/32    md5' "$PG_HBA"
+grep -qF "host    replication    replicator    10.10.10.2/24    md5" "$PG_HBA" \
+  || sed -i '$a host    replication    replicator    10.10.10.2/24    md5' "$PG_HBA"
 
 systemctl restart postgresql
 
@@ -146,7 +146,7 @@ SELECT client_addr, state FROM pg_stat_replication;
    ```
 2. Инициализация из нового Primary при помощи `pg_basebackup`:
    ```bash
-   export PGPASSWORD='Ee123456'
+   export PGPASSWORD='your_password'
    sudo -u postgres pg_basebackup -h <NEW_PRIMARY_IP> -U replicator -D /var/lib/postgresql/<VERSION>/main -X stream -R -P
    unset PGPASSWORD
    chown -R postgres:postgres /var/lib/postgresql/<VERSION>/main

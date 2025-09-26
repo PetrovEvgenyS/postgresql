@@ -5,7 +5,7 @@ set -euo pipefail
 PG_VERSION="16"
 PRIMARY_IP="10.10.10.1"
 REPL_USER="replicator"
-REPL_PASSWORD="Ee123456"
+REPL_PASSWORD="your_password"
 DATA_DIR="/var/lib/postgresql/${PG_VERSION}/main"
 
 echo "[*] Stopping PostgreSQL on Standby ..."

@@ -5,7 +5,7 @@ set -euo pipefail
 PG_VERSION="16"
 STANDBY_IP="10.10.10.2"
 REPL_USER="replicator"
-REPL_PASSWORD="Ee123456"
+REPL_PASSWORD="your_password"
 CONF_DIR="/etc/postgresql/${PG_VERSION}/main"
 DATA_DIR="/var/lib/postgresql/${PG_VERSION}/main"
 PG_HBA="${CONF_DIR}/pg_hba.conf"
